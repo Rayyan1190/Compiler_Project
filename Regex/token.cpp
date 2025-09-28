@@ -1,3 +1,4 @@
+// token.cpp
 #include "token.hpp"
 #include <string>
 using namespace std;
@@ -13,7 +14,7 @@ static string escapeForPrint(const string& s) {
             case '\"': out += "\\\""; break;
             case '\'': out += "\\\'"; break;
             case '\\': out += "\\\\"; break;
-            default:   out.push_back(c); break;
+            default: out.push_back(c); break;
         }
     }
     return out;
@@ -56,6 +57,7 @@ string toString(const Token& t) {
         case TokenType::T_BRACKETR:  return nameOnly("T_BRACKETR");
         case TokenType::T_COMMA:     return nameOnly("T_COMMA");
         case TokenType::T_SEMICOLON: return nameOnly("T_SEMICOLON");
+        case TokenType::T_DOT:       return nameOnly("T_DOT");
         case TokenType::T_ASSIGNOP:  return nameOnly("T_ASSIGNOP");
         case TokenType::T_EQUALSOP:  return nameOnly("T_EQUALSOP");
         case TokenType::T_NOTEQ:     return nameOnly("T_NOTEQ");

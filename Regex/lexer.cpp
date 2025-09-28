@@ -1,10 +1,11 @@
+// lexer.cpp
 #include "lexer.hpp"
 #include <unordered_map>
 #include <regex>
 #include <stdexcept>
 #include <algorithm>
 #include <string_view>
-
+#include <utility>
 using namespace std;
 
 struct Rule { TokenType type; regex pattern; };
@@ -126,6 +127,7 @@ void Lexer::buildRules() {
     R(TokenType::T_BRACKETR, R"(\])");
     R(TokenType::T_COMMA,    R"(,)");
     R(TokenType::T_SEMICOLON,R"(;)");
+    R(TokenType::T_DOT,      R"(\.)");
 }
 
 void Lexer::skipSpaceAndComments() {
@@ -140,47 +142,17 @@ void Lexer::skipSpaceAndComments() {
         if (v.size() >= 2 && v[0] == '/' && v[1] == '*') {
             svmatch mb;
             if (regex_search_sv(v, blockComment, mb)) { pos += mb.length(); moved = true; continue; }
-            auto [ln, cl] = lineColOf(input, pos);
-            throw runtime_error("Unterminated block comment at line " + to_string(ln) + ", col " + to_string(cl));
+            auto lc = lineColOf(input, pos);
+            throw runtime_error("Unterminated block comment at line " + to_string(lc.first) + ", col " + to_string(lc.second));
         }
     }
 }
 
 vector<Token> Lexer::tokenize() {
     vector<Token> out;
-    struct Delim { char ch; size_t at; };
-    vector<Delim> dstack;
-    auto push_delim = [&](TokenType t, size_t at) {
-        char c = 0;
-        if (t == TokenType::T_PARENL)   c = '(';
-        if (t == TokenType::T_BRACEL)   c = '{';
-        if (t == TokenType::T_BRACKETL) c = '[';
-        if (c) dstack.push_back({c, at});
-    };
-    auto pop_delim = [&](TokenType t, size_t at) {
-        char need = 0;
-        if (t == TokenType::T_PARENR)   need = '(';
-        if (t == TokenType::T_BRACER)   need = '{';
-        if (t == TokenType::T_BRACKETR) need = '[';
-        if (!need) return;
-        if (dstack.empty() || dstack.back().ch != need) {
-            auto [ln, cl] = lineColOf(input, at);
-            throw runtime_error("Mismatched closing delimiter at line " + to_string(ln) + ", col " + to_string(cl));
-        }
-        dstack.pop_back();
-    };
-
     while (pos < input.size()) {
         skipSpaceAndComments();
         if (pos >= input.size()) break;
-        {
-            static const regex badNumeric(R"(^\d+[A-Za-z_]\w*)");
-            svmatch m; auto v = curSV(input, pos);
-            if (regex_search_sv(v, badNumeric, m)) {
-                auto [ln, cl] = lineColOf(input, pos);
-                throw runtime_error(string("Invalid numeric literal at line ") + to_string(ln) + ", col " + to_string(cl) + ": '" + m.str() + "'");
-            }
-        }
         bool matched = false;
         {
             svmatch m; auto v = curSV(input, pos);
@@ -210,21 +182,7 @@ vector<Token> Lexer::tokenize() {
             svmatch m; auto v = curSV(input, pos);
             if (regex_search_sv(v, r.pattern, m)) {
                 string lex = m.str();
-                Token tok{r.type, lex, "", pos};
-                switch (r.type) {
-                    case TokenType::T_PARENL:
-                    case TokenType::T_BRACEL:
-                    case TokenType::T_BRACKETL:
-                        push_delim(r.type, pos);
-                        break;
-                    case TokenType::T_PARENR:
-                    case TokenType::T_BRACER:
-                    case TokenType::T_BRACKETR:
-                        pop_delim(r.type, pos);
-                        break;
-                    default: break;
-                }
-                out.push_back(tok);
+                out.push_back(Token{r.type, lex, "", pos});
                 pos += m.length();
                 matched = true;
                 break;
@@ -254,18 +212,10 @@ vector<Token> Lexer::tokenize() {
             if (input[pos] == '"') {
                 throw runtime_error("Unterminated string constant");
             }
-            auto [ln, cl] = lineColOf(input, pos);
+            auto lc = lineColOf(input, pos);
             string sym(1, input[pos]);
-            throw runtime_error("Unrecognized symbol " + sym + " at line " + to_string(ln) + ", col " + to_string(cl));
+            throw runtime_error("Unrecognized symbol " + sym + " at line " + to_string(lc.first) + ", col " + to_string(lc.second));
         }
-    }
-    if (!dstack.empty()) {
-        auto last = dstack.back();
-        auto [ln, cl] = lineColOf(input, last.at);
-        string which = (last.ch=='(' ? "opening '('" :
-                        last.ch=='{' ? "opening '{'" :
-                        last.ch=='[' ? "opening '['" : "opening delimiter");
-        throw runtime_error("Unclosed " + which + " starting at line " + to_string(ln) + ", col " + to_string(cl));
     }
     return out;
 }

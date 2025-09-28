@@ -1,14 +1,5 @@
-fn int my_fn(int x, float y) {
-    // line comment
-    /* block
-       comment
-    */
-    
-    string s = "hi\t\"ok\"\n;
-    float=0.25;
-    bool b = x >= 10 && y != 0.0;
-    if (b) { return x; } else { return 0; }
-    int a = 1 + 2 * 3 - 4 / 2 % 2;
-    x = x << 1; y = y >> 1.0;
-    int arr[3]; arr[0] = 40;
-}
+fn main() {
+    int x = 1;
+    if (x > 0) {
+        x = x + 1;
+    // file ends before closing '}' of main
