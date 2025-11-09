@@ -1,5 +1,50 @@
+/* Sample program to exercise the lexer thoroughly */
+
+fn add(int a, int b) {
+
+    int my_num = a + 134134 & some_bits * 13041 - 123 / -g;
+    parse_var_decl
+    parse_stmt_expr
+        - find +
+        - check left and right of plus
+        - break RHS of '+'
+        - recursively call parse_stmt_expr
+
+
+    return a + b;
+}
+
 fn main() {
-    int x = 1;
-    if (x > 0) {
-        x = x + 1;
-    // file ends before closing '}' of main
+    // Declarations
+    int    x = 10;
+    float  y = 3.5;
+    bool   ok = true;            // 'true' will be T_IDENTIFIER("true")
+    string s  = "Hello\tWorld\n";
+    char   c  = '\n';
+
+    /* Arithmetic + precedence */
+    x = (x + 2) * 3 - 4 / 2 % 5;
+
+    /* Logical */
+    ok = (x > 5) && (y <= 10.0) || !ok;
+
+    /* Bitwise & shifts */
+    x = (x << 2) | (x & 7) ^ (x >> 1);
+
+    /* Indexing + call */
+    int arr[3];
+    arr[0] = add(x, 1);
+
+    /* Control flow */
+    if (x != 0) {
+        while (x > 0) {
+            x = x - 1;
+        }
+    } else {
+        for (int i = 0; i < 3; i = i + 1) {
+            arr[i] = i;
+        }
+    }
+
+    return 0;
+}
