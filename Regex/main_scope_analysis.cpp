@@ -9,7 +9,6 @@
 #include "parser.hpp"
 #include "ast.hpp"
 #include "scope.hpp"
-#include "typechk.hpp"
 
 using namespace std;
 
@@ -36,27 +35,6 @@ static const char* scope_error_name(ScopeError e){
         case ScopeError::VariableRedefinition:          return "VariableRedefinition";
         case ScopeError::FunctionPrototypeRedefinition: return "FunctionPrototypeRedefinition";
         default: return "ScopeError";
-    }
-}
-
-static const char* typechk_error_name(TypeChkError e){
-    switch (e){
-        case TypeChkError::ErroneousVarDecl: return "ErroneousVarDecl";
-        case TypeChkError::FnCallParamCount: return "FnCallParamCount";
-        case TypeChkError::FnCallParamType: return "FnCallParamType";
-        case TypeChkError::ErroneousReturnType: return "ErroneousReturnType";
-        case TypeChkError::ExpressionTypeMismatch: return "ExpressionTypeMismatch";
-        case TypeChkError::ExpectedBooleanExpression: return "ExpectedBooleanExpression";
-        case TypeChkError::ErroneousBreak: return "ErroneousBreak";
-        case TypeChkError::NonBooleanCondStmt: return "NonBooleanCondStmt";
-        case TypeChkError::EmptyExpression: return "EmptyExpression";
-        case TypeChkError::AttemptedBoolOpOnNonBools: return "AttemptedBoolOpOnNonBools";
-        case TypeChkError::AttemptedBitOpOnNonNumeric: return "AttemptedBitOpOnNonNumeric";
-        case TypeChkError::AttemptedShiftOnNonInt: return "AttemptedShiftOnNonInt";
-        case TypeChkError::AttemptedAddOpOnNonNumeric: return "AttemptedAddOpOnNonNumeric";
-        case TypeChkError::AttemptedExponentiationOfNonNumeric: return "AttemptedExponentiationOfNonNumeric";
-        case TypeChkError::ReturnStmtNotFound: return "ReturnStmtNotFound";
-        default: return "TypeChkError";
     }
 }
 
@@ -107,19 +85,7 @@ int main(){
             return 4;
         }
 
-        TypeChecker tc(sa);
-        tc.analyzeProgram(*prog);
-
-        if (tc.hasErrors()) {
-            cerr << "Type checking reported errors:\n";
-            for (const auto& d : tc.getDiagnostics()) {
-                cerr << "  [" << typechk_error_name(d.kind) << "] "
-                     << d.message << "\n";
-            }
-            return 5;
-        }
-
-        cout << "\n[Scope OK]\n[TypeCheck OK]\n\n";
+        cout << "\n[Scope OK]\n\n";
         prog->print(cout);
     }
     catch (const ParseException& ex){
@@ -128,7 +94,7 @@ int main(){
         return 1;
     }
     catch (const exception& ex){
-        cerr << "Lexer/Scope/Type error: " << ex.what() << "\n";
+        cerr << "Lexer/Scope error: " << ex.what() << "\n";
         return 1;
     }
 
