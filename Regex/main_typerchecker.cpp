@@ -10,7 +10,6 @@
 #include "ast.hpp"
 #include "scope.hpp"
 #include "typechk.hpp"
-#include "ir.hpp"
 
 using namespace std;
 
@@ -58,15 +57,6 @@ static const char* typechk_error_name(TypeChkError e){
         case TypeChkError::AttemptedExponentiationOfNonNumeric: return "AttemptedExponentiationOfNonNumeric";
         case TypeChkError::ReturnStmtNotFound: return "ReturnStmtNotFound";
         default: return "TypeChkError";
-    }
-}
-
-static const char* irgen_error_name(IRGenError e){
-    switch (e){
-        case IRGenError::UnsupportedExpression: return "UnsupportedExpression";
-        case IRGenError::UnsupportedStatement: return "UnsupportedStatement";
-        case IRGenError::InvalidAssignmentTarget: return "InvalidAssignmentTarget";
-        default: return "IRGenError";
     }
 }
 
@@ -129,22 +119,8 @@ int main(){
             return 5;
         }
 
-        IRGenerator irgen(sa, tc);
-        IRProgram ir = irgen.generate(*prog);
-
-        if (irgen.hasErrors()) {
-            cerr << "IR generation reported errors:\n";
-            for (const auto& d : irgen.getDiagnostics()) {
-                cerr << "  [" << irgen_error_name(d.kind) << "] "
-                     << d.message << "\n";
-            }
-            return 6;
-        }
-
-        cout << "\n[Scope OK]\n[TypeCheck OK]\n[IR OK]\n\n";
+        cout << "\n[Scope OK]\n[TypeCheck OK]\n\n";
         prog->print(cout);
-        cout << "\n\n[TAC]\n";
-        printIRProgram(ir, cout);
     }
     catch (const ParseException& ex){
         cerr << "Parse error [" << parse_error_name(ex.kind) << "]: " << ex.what() << "\n";
@@ -152,7 +128,7 @@ int main(){
         return 1;
     }
     catch (const exception& ex){
-        cerr << "Lexer/Scope/Type/IR error: " << ex.what() << "\n";
+        cerr << "Lexer/Scope/Type error: " << ex.what() << "\n";
         return 1;
     }
 
